@@ -1,0 +1,36 @@
+ Project Name: Fusion video
+ =========================================================================
+ Location engine and JSON parse module Release Notes
+ =========================================================================
+Project Name : Fusion video                        
+Software version: 1.1.0
+
+--------------------------------------------------------------------------
+* Software version:  1.1.1 (XXXXXX)
+**************************************************************************
+Author          : Caffery Wang
+Modify Date     : 2018/03/09
+--------------------------------------------------------------------------
+1. adjust code structure. 
+2. user can be able to input ip address and port. 
+--------------------------------------------------------------------------
+* Software version:  1.1.0 (XXXXXX)
+**************************************************************************
+Author          : Caffery Wang
+Modify Date     : 2018/03/07
+--------------------------------------------------------------------------
+1. define structure data type.
+2. define client function.
+3. define Json parse function.
+--------------------------------------------------------------------------
+* Software version:  1.0.0 (XXXXXX)
+**************************************************************************
+Author          : Caffery Wang
+Modify Date     : 2018/03/07
+--------------------------------------------------------------------------
+1. Create Socket client and receive location information from server.
+CW#18030701 
+
+2. Connect JSON parse module to Socket client .
+CW#18030702
+
