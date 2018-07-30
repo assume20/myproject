@@ -1,0 +1,3 @@
+UPDATE COMRTU C SET (C.STRNAME,C.byrtuaddress,C.strmainchipaddr,C.wmainchportnum)=
+(SELECT T.STRNAME,T.byrtuaddress,T.STRMAINCHIPADDR,T.WMAINCHPORTNUM FROM TEST T WHERE T.WRTUID = c.wrtuid)
+where exists(select 1 from test t where t.wrtuid = c.wrtuid);

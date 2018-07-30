@@ -1,0 +1,326 @@
+﻿#include <iostream>
+#include "opencv2/core/core.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/opencv.hpp"
+//#include "putText.h"
+//#include "onMouse.h"
+#include "comParse.h"
+
+using namespace std;
+using namespace cv;
+
+#pragma comment(lib,"LEJP_d.lib")
+
+/*打开IPCamera并矫正*/
+#if 1
+Mat mergeCols(Mat A, Mat B);
+Mat mergeRows(Mat A, Mat B);
+
+int main()
+{
+	VideoCapture vcap;
+	Mat frame, frameCalibration;
+	
+	const string videoStreamAddress = "rtsp://admin:admin@192.168.0.12:554/cam/realmonitor?channel=1&subtype=0";
+
+	if (!vcap.open(videoStreamAddress))
+	{
+		cout << "Error opening video stream or file!" << endl;
+		return -1;
+	}
+	
+	string imagename;
+
+	if (!vcap.read(frame))
+	{
+		cout << "No frame!" << endl;
+		waitKey();
+	}
+	
+	Mat cameraIntrinsicMatrix = Mat::eye(3, 3, CV_64F);
+
+	cameraIntrinsicMatrix.at<double>(0, 0) = 4.205183384361002e+02;
+	cameraIntrinsicMatrix.at<double>(0, 1) = -0.770138979477678;
+	cameraIntrinsicMatrix.at<double>(0, 2) = 3.488635307504808e+02;
+	cameraIntrinsicMatrix.at<double>(1, 1) = 6.111397246778864e+02;
+	cameraIntrinsicMatrix.at<double>(1, 2) = 2.191245672938310e+02;
+
+	Mat distCoeffs = Mat::zeros(5, 1, CV_64F);
+	distCoeffs.at<double>(0, 0) = -0.124100551105810;
+	distCoeffs.at<double>(1, 0) = 0.064461256926939;
+	distCoeffs.at<double>(2, 0) = 0.005502552915246;
+	distCoeffs.at<double>(3, 0) = 0.013448439476794;
+
+	Mat view, rview, map1, map2;
+	Size imageSize;
+
+	imageSize = frame.size();
+	initUndistortRectifyMap(cameraIntrinsicMatrix, distCoeffs, Mat(),
+		getOptimalNewCameraMatrix(cameraIntrinsicMatrix, distCoeffs, imageSize, 1, imageSize, 0),
+		imageSize, CV_16SC2, map1, map2);
+	
+	Mat cameraRotationMatrix = Mat::zeros(3, 3, CV_64F);
+	Mat cameraTranslationVectors = Mat::zeros(3, 1, CV_64F);
+
+	cameraRotationMatrix.at<double>(0, 0) = -0.9906;
+	cameraRotationMatrix.at<double>(1, 0) = -0.1262;
+	cameraRotationMatrix.at<double>(2, 0) = -0.0530;
+	cameraRotationMatrix.at<double>(0, 1) = -0.0098;
+	cameraRotationMatrix.at<double>(1, 1) = -0.4514;
+	cameraRotationMatrix.at<double>(2, 1) = 0.8923;	
+	cameraRotationMatrix.at<double>(0, 2) = -0.1365;
+	cameraRotationMatrix.at<double>(1, 2) = 0.8834;
+	cameraRotationMatrix.at<double>(2, 2) = 0.4484;
+
+	cameraTranslationVectors.at<double>(0, 0) = -1.015357044687977e+02;
+	cameraTranslationVectors.at<double>(1, 0) = 6.610117357612446e+02;
+	cameraTranslationVectors.at<double>(2, 0) = 2.699357615521883e+03;
+
+	Mat zerosMatrix = Mat::zeros(3, 1, CV_64F);
+	Mat cameraIntrinsic = mergeCols(cameraIntrinsicMatrix, zerosMatrix);
+	cout << "cameraIntrinsic =\n" << cameraIntrinsic << endl;
+
+	Mat cameraExtrenalMatrix;
+	cameraExtrenalMatrix = mergeCols(cameraRotationMatrix, cameraTranslationVectors);
+	cout << "cameraExtrenalMatrix =\n" << cameraExtrenalMatrix << endl;
+
+	Mat cameraUnitMatrix = Mat::zeros(1, 4, CV_64F);
+	cameraUnitMatrix.at<double>(0, 3) = 1;
+	Mat cameraExtrenal = mergeRows(cameraExtrenalMatrix, cameraUnitMatrix);
+	cout << "cameraExtrenal =\n" << cameraExtrenal << endl;
+
+	Mat cameraPix, cameraWorld = Mat::ones(4,1, CV_64F);
+	int world_x = 0, world_y = 0;
+
+	int x = 0;
+	int y = 0;
+
+	for (;;)
+	{
+		if (!vcap.read(frame))
+		{
+			cout << "No frame" << endl;
+			waitKey();
+		}
+
+		LOcateinfo infor("192.168.1.253", "13107");
+		cout << infor.getXcoord() << endl;
+		cout << infor.getYcoord() << endl;
+		cout << infor.getTagid() << endl;
+		//system("pause");
+		
+		if (!strcmp(infor.getTagid(), "DECA01001000158D"))
+		{
+			world_x = infor.getXcoord() * 1000;
+			world_y = infor.getYcoord() * 1000;
+
+			//坐标原点位于世界坐标系的（4960， 2150）
+			//第1区域
+			if ((world_x <= 4960) && (world_y >= 2150)) {
+				cameraWorld.at<double>(0, 0) = 4960 - world_x;
+				cameraWorld.at<double>(1, 0) = world_y - 2150;
+			}//第2区域
+			else if ((world_x < 4960) && (world_y < 2150)) {
+				cameraWorld.at<double>(0, 0) = 4960 - world_x;
+				cameraWorld.at<double>(1, 0) = world_y - 2150;
+			}//第3区域
+			else if ((world_x > 4960) && (world_y < 2150)) {
+				cameraWorld.at<double>(0, 0) = 4960 - world_x;
+				cameraWorld.at<double>(1, 0) = world_y - 2150;
+			}//第4区域
+			else if ((world_x > 4960) && (world_y > 2150)) {
+				cameraWorld.at<double>(0, 0) = 4960 - world_x;
+				cameraWorld.at<double>(1, 0) = world_y - 2150;
+			}
+
+			cameraWorld.at<double>(2, 0) = 0;
+			cameraWorld.at<double>(3, 0) = 1;
+			cameraPix = cameraIntrinsic * cameraExtrenal * cameraWorld;
+			cout << "cameraPix =\n" << cameraPix << endl;
+
+			Mat cameraPix2 = cameraPix / cameraPix.at<double>(2, 0);
+			cout << "cameraPix2 =\n" << cameraPix2 << endl;
+
+			x = cameraPix2.at<double>(0, 0);
+			y = cameraPix2.at<double>(1, 0);
+		}
+
+		circle(frame, Point(x, y), 1, CV_RGB(0, 0, 255), 2);
+		imshow("Original", frame);
+		remap(frame, frameCalibration, map1, map2, INTER_LINEAR);
+		//circle(frameCalibration, Point(x, y), 1, CV_RGB(0, 255, 0), 2);
+		//imshow("Calibration", frameCalibration);
+		//setMouseCallback("Original", onMouse, reinterpret_cast<void*> (&frame));
+		char key = waitKey(1);
+
+		if (key == 27 || key == 'q' || key == 'Q')
+			break;
+	}
+
+	return 0;
+}
+
+Mat mergeCols(Mat A, Mat B)
+{
+	if (!(A.rows == B.rows&&A.type() == B.type()))
+	{
+		cout << "Two matrix rows are difference!" << endl;
+	}
+
+	int totalCols = A.cols + B.cols;
+	
+	Mat mergedDescriptors(A.rows, totalCols, A.type());
+	Mat submat = mergedDescriptors.colRange(0, A.cols);
+	A.copyTo(submat);
+	submat = mergedDescriptors.colRange(A.cols, totalCols);
+	B.copyTo(submat);
+	return mergedDescriptors;
+}
+
+Mat mergeRows(Mat A, Mat B)
+{
+	if (!(A.cols == B.cols&&A.type() == B.type())) {
+		cout << "Two matrix cols are difference!" << endl;
+	}
+
+	int totalRows = A.rows + B.rows;
+	 
+	Mat mergedDescriptors(totalRows, A.cols, A.type());
+	Mat submat = mergedDescriptors.rowRange(0, A.rows);
+	A.copyTo(submat);
+	submat = mergedDescriptors.rowRange(A.rows, totalRows);
+	B.copyTo(submat);
+	return mergedDescriptors;
+}
+
+#endif
+
+/*显示汉字*/
+#if 0
+int main()
+{
+	Mat img = imread("E:/runanwork/files/channel01/1.bmp");
+
+	putTextZH(img, "王雪冬", Point(50, 50), Scalar(0, 0, 255), 30, "Arial");
+	putTextZH(img, "微软雅黑字体换...\n行，斜体，下划线，显示!", Point(50, 100), Scalar(0, 255, 0), 30, "微软雅黑", true, true);
+	putTextZH(img, "楷体字体换...\n行，斜体，下划线，显示!", Point(50, 200), Scalar(128, 255, 0), 30, "楷体", true, true);
+
+	imshow("test", img);
+
+	waitKey();
+
+	return 0;
+}
+#endif
+
+/*矩阵操作*/
+#if 0
+int main()
+{
+	Mat A = Mat::ones(2, 3, CV_32FC1);
+	Mat B = Mat::ones(3, 2, CV_32FC1);
+	Mat AB, AB2;
+
+	A.at<float>(0, 0) = 1;
+	A.at<float>(0, 1) = 2;
+	A.at<float>(0, 2) = 3;
+	A.at<float>(1, 0) = 4;
+	A.at<float>(1, 1) = 5;
+	A.at<float>(1, 2) = 6;
+
+	B.at<float>(0, 0) = 1;
+	B.at<float>(0, 1) = 2;
+	B.at<float>(1, 0) = 3;
+	B.at<float>(1, 1) = 4;
+	B.at<float>(2, 0) = 5;
+	B.at<float>(2, 1) = 6;
+
+	AB = A*B;
+	AB2 = A.mul(B);
+	cout << "A=\n" << A << endl << endl;
+	cout << "B=\n" << B << endl << endl;
+	cout << "A*B=\n" << AB << endl << endl;
+	cout << "A.*B=\n" << AB2 << endl << endl;
+
+	return 0;
+}
+#endif
+
+/*矩阵操作*/
+#if 0
+int main()
+{
+	Mat A = Mat::ones(2, 2, CV_32FC1);
+	Mat B = Mat::ones(2, 2, CV_32FC1);
+	Mat At, AB, AB2;
+
+	A.at<float>(0, 0) = 1;
+	A.at<float>(0, 1) = 2;
+	A.at<float>(1, 0) = 4;
+	A.at<float>(1, 1) = 5;
+
+	B.at<float>(0, 0) = 1;
+	B.at<float>(0, 1) = 2;
+	B.at<float>(1, 0) = 4;
+	B.at<float>(1, 1) = 5;
+
+	At = A.t();
+	AB = A.inv()*B;
+	AB2 = A / B;
+	cout << "A=\n" << A << endl << endl;
+	cout << "At=\n" << At << endl << endl;
+	cout << "Ainv=\n" << A.inv() << endl << endl;
+	cout << "B=\n" << B << endl << endl;
+	cout << "A/B = \n" << AB << endl << endl;
+	cout << "A./B=\n" << AB2 << endl << endl;
+	system("pause");
+
+	return 0;
+}
+#endif
+
+/*打开IPCamera并截图*/
+#if 0
+int main()
+{
+	VideoCapture vcap;
+	Mat frame, frameCalibration;
+	int i = 1;
+	string imageName;
+
+	//const string videoStreamAddress = "rtsp://admin:123456@192.168.0.13:554/h264/ch01/main/av_stream";
+	const string videoStreamAddress = "rtsp://admin:admin@192.168.0.12:554/cam/realmonitor?channel=1&subtype=0";
+	
+	if (!vcap.open(videoStreamAddress)){
+		cout << "Error opening video stream or file!" << endl;
+		return -1;
+	}
+
+	if (!vcap.read(frame)){
+		cout << "No frame!" << endl;
+		waitKey();
+	}
+
+	for (;;){
+		if (!vcap.read(frame)){
+			cout << "No frame" << endl;
+			waitKey();
+		}
+
+		imshow("Origianl", frame);
+
+		char key = waitKey(1);
+
+		if (key == 'P' || key == 'p'){
+			imageName = "E:/runanwork/files/images/" + to_string(i++) + ".jpg";
+			imwrite(imageName, frame);
+			cout << "截图成功!" << endl;
+		}
+		else if(key == 27){
+			break;
+		}	
+	}
+
+	return 0;
+}
+#endif

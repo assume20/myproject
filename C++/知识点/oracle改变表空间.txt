@@ -1,0 +1,7 @@
+select tablespace_name, file_id, file_name,  --查看变空间位置
+round(bytes/(1024*1024),0) total_space
+from dba_data_files
+order by tablespace_name
+
+
+alter database datafile 'C:\ORACLE\PRODUCT\10.2.0\ORADATA\IESDB\IES_MIAOSHU_TABLESPACE.ORA' resize 10241m --更改大小

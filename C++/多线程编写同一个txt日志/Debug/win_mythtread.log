@@ -1,0 +1,11 @@
+﻿  stdafx.cpp
+d:\microsoft visual studio 14.0\vc\atlmfc\include\afx.h(38): warning C4996: 'MBCS_Support_Deprecated_In_MFC': MBCS support in MFC is deprecated and may be removed in a future version of MFC.
+  d:\microsoft visual studio 14.0\vc\atlmfc\include\afx.h(33): note: 参见“MBCS_Support_Deprecated_In_MFC”的声明
+  _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
+  win_mythtread.cpp
+c:\users\administrator\desktop\多线程编写同一个txt日志\win_mythtread.cpp(4): fatal error C1083: 无法打开预编译头文件: “Debug\win_mythtread.pch”: Permission denied
+  my_obiect_Thtread.cpp
+c:\users\administrator\desktop\多线程编写同一个txt日志\my_obiect_thtread.cpp(1): fatal error C1083: 无法打开预编译头文件: “Debug\win_mythtread.pch”: Permission denied
+  MyLog.cpp
+c:\users\administrator\desktop\多线程编写同一个txt日志\mylog.cpp(5): fatal error C1083: 无法打开预编译头文件: “Debug\win_mythtread.pch”: Permission denied
+  正在生成代码...

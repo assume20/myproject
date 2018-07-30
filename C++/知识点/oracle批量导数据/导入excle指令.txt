@@ -1,0 +1,1 @@
+sqlldr userid=ies_ms/iesapp@a_ms_1 control=....\input.ctl

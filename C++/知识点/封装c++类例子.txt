@@ -1,0 +1,75 @@
+#ifndef _COMMUNICATION_MOD
+#define _COMMUNICATION_MOD
+
+#ifdef SOCKCLI_DLL_EXPORT
+
+#ifndef SOCKCLI_STD_CALL
+#define SOCKCLI_STD_CALL __declspec(dllexport) 
+#endif  //end #ifndef SOCKCLI_STD_CALL
+
+#else
+
+#ifndef SOCKCLI_STD_CALL
+#define SOCKCLI_STD_CALL __declspec(dllimport) 
+#endif //end #ifndef SOCKCLI_STD_CALL
+
+#endif//end #ifdef SOCKCLI_STD_CALL
+
+class SOCKCLI_STD_CALL LOcateinfo
+{
+public:
+	LOcateinfo(char *ipaddr, char *port);
+	int getType();
+	char* getTime();
+	char* getLeGuid();
+	char* getTagid();
+	double getXcoord();
+	double getYcoord();
+	double getZcoord();
+private:
+	char m_recBuffer[190];
+};
+
+#endif //_COMMUNICATION_MOD
+
+
+
+
+/**********************************************************************/
+/*  抽象类方法 */
+#ifndef _COMMUNICATION_MOD
+#define _COMMUNICATION_MOD
+
+
+
+#ifdef SOCKCLI_DLL_EXPORT
+
+#ifndef SOCKCLI_STD_CALL
+#define SOCKCLI_STD_CALL __declspec(dllexport) 
+#endif  //end #ifndef SOCKCLI_STD_CALL
+
+#else
+
+#ifndef SOCKCLI_STD_CALL
+#define SOCKCLI_STD_CALL __declspec(dllimport) 
+#endif //end #ifndef SOCKCLI_STD_CALL
+
+#endif//end #ifdef SOCKCLI_STD_CALL
+
+class SOCKCLI_STD_CALL LOcateinfo
+{
+public:
+	virtual int getType() = 0;
+	virtual char* getTime() = 0;
+	virtual char* getLeGuid() = 0;
+	virtual char* getTagid() = 0;
+	virtual double getXcoord() = 0;
+	virtual double getYcoord() = 0;
+	virtual double getZcoord() = 0;
+private:
+	char m_recBuffer[190];
+};
+
+extern "C" SOCKCLI_STD_CALL LOcateinfo* createLocateInfo(char *ipaddr, char *port);
+
+#endif //_COMMUNICATION_MOD

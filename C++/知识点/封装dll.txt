@@ -1,0 +1,13 @@
+#ifdef OMTP_DLL_EXPORT
+
+#ifndef OMTP_STD_CALL
+#define OMTP_STD_CALL __declspec(dllexport) 
+#endif  //end #ifndef OMTP_STD_CALL
+
+#else
+
+#ifndef OMTP_STD_CALL
+#define OMTP_STD_CALL __declspec(dllimport) 
+#endif //end #ifndef OMTP_STD_CALL
+
+#endif//end #ifdef OMTP_DLL_EXPORT
